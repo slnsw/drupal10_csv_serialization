@@ -150,6 +150,9 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   /**
    * Formats all cells in a given CSV row.
    *
+   * This flattens complex data structures into a string, and formats
+   * the string.
+   *
    * @param $row
    * @return array
    */
@@ -173,8 +176,11 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   /**
    * Flattens a multi-dimensional array into a single level.
    *
-   * @param array $cell_value
+   * @param array $data
+   *   An array of data for be flattened into a cell string value.
+   *
    * @return string
+   *   The string value of the CSV cell, unsanitized.
    */
   protected function flattenCell($data) {
     $depth = $this->arrayDepth($data);
@@ -225,11 +231,17 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   }
 
   /**
-   * @param $row
-   * @return mixed
+   * Explodes multiple, concatenated values for all cells in a row.
+   *
+   * @param array $row
+   *   The row of CSV cells.
+   *
+   * @return array
+   *   The same row of CSV cells, with each cell's contents exploded.
    */
   public function expandRow($row) {
     foreach ($row as $column_name => $cell_data) {
+      // @todo Allow customization of this in-cell separator.
       if (strpos($cell_data, '|') !== FALSE) {
         $row[$column_name] = explode('|', $cell_data);
       }
@@ -246,6 +258,11 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   }
 
   /**
+   * Determine the depth of an array.
+   *
+   * This method determines array depth by analyzing the indentation of the
+   * dumped array. This avoid potential issues with recursion.
+   *
    * @param $array
    * @return float
    *
