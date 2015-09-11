@@ -28,8 +28,10 @@ class CsvEncoderTest extends UnitTestCase {
   }
 
   /**
+   * Provides data for testing the encoder.
+   *
    * @return array
-   *   Am array of multi-dimentional arrays, to be converted to CSVs.
+   *   Am array of multi-dimensional arrays, to be converted to CSVs.
    */
   public function provideEncodeData() {
     $csv1_data = [
@@ -76,7 +78,7 @@ class CsvEncoderTest extends UnitTestCase {
   }
 
   /**
-   *
+   * Provides data for testing the decoder.
    */
   public function provideDecodeData() {
     $csv1_encoded = file_get_contents(__DIR__ . '/CsvEncoderTest.csv');
@@ -102,7 +104,7 @@ class CsvEncoderTest extends UnitTestCase {
         'title' => 'This is title 3',
         'body' => 'This is, body 3',
         // Note that due to the flattening of multi-dimensional arrays
-        // during encoding, this does not match Row 3 in provideCsvData().
+        // during encoding, this does not match Row 3 in provideEncodeData().
         'images' => [
           'img1.jpg',
           'Image 1',
@@ -120,23 +122,24 @@ class CsvEncoderTest extends UnitTestCase {
   }
 
   /**
+   * Tests the CSV output of the encoder.
+   *
    * @dataProvider provideEncodeData
    */
   public function testEncodeCsv($csv_data, $csv_encoded) {
     // @todo Test passing in arguments to the constructor. E.g., $separator, $enclosure, strip_tags, etc.
     // Note that what we encode does not exactly represent the hierarchy of
-    // the data passed in. This is because cells containing multidimensional
+    // the data passed in. This is because cells containing multi-dimensional
     // arrays are flattened. Thus, encode($input) != decode($output).
     $this->assertEquals($csv_encoded, $this->encoder->encode($csv_data, 'csv'));
   }
 
   /**
+   * Tests the data structure created by decoding a CSV.
+   *
    * @dataProvider provideDecodeData
    */
   public function testDecodeCsv($csv_encoded, $csv_data) {
-    // Note that what we encode does not exactly represent the hierarchy of
-    // the data passed in. This is because cells containing multidimensional
-    // arrays are flattened. Thus, encode($input) != decode($output).
     $this->assertEquals($csv_data, $this->encoder->decode($csv_encoded, 'csv'));
   }
 }
