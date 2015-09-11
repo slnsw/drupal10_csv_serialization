@@ -10,8 +10,10 @@ namespace Drupal\csv_serialization\Encoder;
 use Symfony\Component\Serializer\Encoder\DecoderInterface;
 use Symfony\Component\Serializer\Encoder\EncoderInterface;
 use League\Csv\Writer;
+use League\Csv\Reader;
 use SplTempFileObject;
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 
 /**
  * Adds CSV encoder support for the Serialization API.
@@ -113,13 +115,13 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
       // Set data.
       $headers = $this->extractHeaders($data);
       $csv->insertOne($headers);
-      $csv->addFormatter(array($this, 'flattenArray'));
+      $csv->addFormatter(array($this, 'formatRow'));
       foreach ($data as $row) {
         $csv->insertOne($row);
       }
       $output = $csv->__toString();
 
-      return $output;
+      return trim($output);
     }
     catch (\Exception $e) {
       throw new InvalidDataTypeException($e->getMessage(), $e->getCode(), $e);
@@ -146,38 +148,48 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   }
 
   /**
-   * Reduces a multidimensional array to a depth of 2.
-   *
-   * All array of depth 3 are imploded into a single value. Arrays of depth
-   * greater than 3 will be represented simply as "array".
+   * Formats all cells in a given CSV row.
    *
    * @param $row
    * @return array
    */
-  protected function flattenArray($row) {
+  public function formatRow($row) {
     $formatted_row = array();
 
-    foreach ($row as $field_name => $field) {
-      if (sizeof($field) > 0) {
-        foreach ($field as $delta => $properties) {
-          // Note that property keys are not preserved.
-          // @todo Add validation for arrays of depth greater than 3.
-          if (sizeof($properties) > 1) {
-            $value = implode('|', $properties);
-          }
-          else {
-            $value = reset($properties);
-          }
-
-          $formatted_row[] = $this->formatValue($value);
-        }
+    foreach ($row as $column_name => $cell_data) {
+      if (is_array($cell_data)) {
+        $cell_value = $this->flattenCell($cell_data);
       }
       else {
-        $formatted_row[] = "";
+        $cell_value = $cell_data;
       }
+
+      $formatted_row[] = $this->formatValue($cell_value);
     }
 
     return $formatted_row;
+  }
+
+  /**
+   * Flattens a multi-dimensional array into a single level.
+   *
+   * @param array $cell_value
+   * @return string
+   */
+  protected function flattenCell($data) {
+    $depth = $this->arrayDepth($data);
+
+    if ($depth == 1) {
+      // @todo Allow customization of this in-cell separator.
+      return implode('|', $data);
+    }
+    else {
+      $cell_value = "";
+      foreach ($data as $item) {
+        $cell_value .= '|' . $this->flattenCell($item);
+      }
+      return trim($cell_value, '|');
+    }
   }
 
   /**
@@ -204,7 +216,26 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    * {@inheritdoc}
    */
   public function decode($data, $format, array $context = array()) {
-    return str_getcsv($data, $this->delimiter, $this->enclosure, $this->escape_char);
+    $csv = Reader::createFromString($data);
+    $csv->setDelimiter($this->delimiter);
+    $csv->setEnclosure($this->enclosure);
+    $csv->setEscape($this->escapeChar);
+
+    return $csv->fetchAssoc(0, array($this, 'expandRow'));
+  }
+
+  /**
+   * @param $row
+   * @return mixed
+   */
+  public function expandRow($row) {
+    foreach ($row as $column_name => $cell_data) {
+      if (strpos($cell_data, '|') !== FALSE) {
+        $row[$column_name] = explode('|', $cell_data);
+      }
+    }
+
+    return $row;
   }
 
   /**
@@ -214,4 +245,26 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
     return static::$format;
   }
 
+  /**
+   * @param $array
+   * @return float
+   *
+   * @see http://stackoverflow.com/a/263621
+   */
+  protected function arrayDepth($array) {
+    $max_indentation = 1;
+
+    $array_str = print_r($array, true);
+    $lines = explode("\n", $array_str);
+
+    foreach ($lines as $line) {
+      $indentation = (strlen($line) - strlen(ltrim($line))) / 4;
+
+      if ($indentation > $max_indentation) {
+        $max_indentation = $indentation;
+      }
+    }
+
+    return ceil(($max_indentation - 1) / 2) + 1;
+  }
 }
