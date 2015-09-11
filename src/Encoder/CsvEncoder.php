@@ -36,18 +36,16 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   protected $enclosure;
 
   /**
-   * Indicates the character used for escaping.
+   * Indicates the character used for escaping. Defaults to "\".
    *
-   * Defaults to "\".
-   *
-   * @var bool
+   * @var string
    */
   protected $escapeChar;
 
   /**
-   * The formats that this Encoder supports.
+   * The format that this encoder supports.
    *
-   * @var array
+   * @var string
    */
   protected static $format = 'csv';
 
@@ -59,14 +57,16 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *
    * @param string $enclosure
    *   Indicates the character used for field enclosure. Defaults to '"'.
+   *
    * @param string $escape_char
+   *   Indicates the character used for escaping. Defaults to "\"
    */
   public function __construct($delimiter = ",", $enclosure = '"', $escape_char = "\\") {
     $this->delimiter = $delimiter;
     $this->enclosure = $enclosure;
     $this->escapeChar = $escape_char;
 
-    if (! ini_get("auto_detect_line_endings")) {
+    if (!ini_get("auto_detect_line_endings")) {
       ini_set("auto_detect_line_endings", '1');
     }
   }
@@ -180,7 +180,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *   An array of data for be flattened into a cell string value.
    *
    * @return string
-   *   The string value of the CSV cell, unsanitized.
+   *   The string value of the CSV cell, un-sanitized.
    */
   protected function flattenCell($data) {
     $depth = $this->arrayDepth($data);
