@@ -141,10 +141,15 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *   An array of CSV headesr.
    */
   protected function extractHeaders($data) {
-    $first_row = $data[0];
-    $headers = array_keys($first_row);
+    if (!empty($data)) {
+      $first_row = $data[0];
+      $headers = array_keys($first_row);
 
-    return $headers;
+      return $headers;
+    }
+    else {
+      return array();
+    }
   }
 
   /**
