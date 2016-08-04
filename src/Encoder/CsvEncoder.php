@@ -105,6 +105,10 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
         break;
     }
 
+    if (!empty($context['views_style_plugin']->options['csv_settings'])) {
+      $this->setSettings($context['views_style_plugin']->options['csv_settings']);
+    }
+
     try {
       // Instantiate CSV writer with options.
       $csv = Writer::createFromFileObject(new SplTempFileObject());
@@ -289,4 +293,14 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
 
     return ceil(($max_indentation - 1) / 2) + 1;
   }
+
+  /**
+   * Set CSV settings from the Views settings array.
+   */
+  protected function setSettings(array $settings) {
+    $this->delimiter = $settings['delimiter'];
+    $this->enclosure = $settings['enclosure'];
+    $this->escapeChar = $settings['escape_char'];
+  }
+
 }
