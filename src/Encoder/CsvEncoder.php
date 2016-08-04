@@ -296,9 +296,13 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
 
   /**
    * Set CSV settings from the Views settings array.
+   *
+   * If a tab character ('\t') is used for the delimiter, it will be properly
+   * converted to "\t".
    */
   protected function setSettings(array $settings) {
-    $this->delimiter = $settings['delimiter'];
+    // Replace tab character with one that will be properly interpreted.
+    $this->delimiter = str_replace('\t', "\t", $settings['delimiter']);
     $this->enclosure = $settings['enclosure'];
     $this->escapeChar = $settings['escape_char'];
   }
