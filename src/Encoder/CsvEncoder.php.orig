@@ -222,6 +222,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
     $value = Html::decodeEntities($value);
     $value = strip_tags($value);
     $value = trim($value);
+    $value = utf8_decode($value);
 
     return $value;
   }
