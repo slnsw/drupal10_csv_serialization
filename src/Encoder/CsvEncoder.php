@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\csv_serialization\Encoder\CsvEncoder.
- */
-
 namespace Drupal\csv_serialization\Encoder;
 
 use Symfony\Component\Serializer\Encoder\DecoderInterface;
