@@ -38,6 +38,20 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   protected $escapeChar;
 
   /**
+   * Whether to strip tags from values or not. Defaults to TRUE.
+   *
+   * @var bool
+   */
+  protected $stripTags;
+
+  /**
+   * Whether to trim values or not. Defaults to TRUE.
+   *
+   * @var bool
+   */
+  protected $trimValues;
+
+  /**
    * The format that this encoder supports.
    *
    * @var string
@@ -60,11 +74,17 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *   Indicates the character used for field enclosure. Defaults to '"'.
    * @param string $escape_char
    *   Indicates the character used for escaping. Defaults to "\".
+   * @param bool $strip_tags
+   *   Whether to strip tags from values or not. Defaults to TRUE.
+   * @param bool $trim_values
+   *   Whether to trim values or not. Defaults to TRUE.
    */
-  public function __construct($delimiter = ",", $enclosure = '"', $escape_char = "\\") {
+  public function __construct($delimiter = ",", $enclosure = '"', $escape_char = "\\", $strip_tags = TRUE, $trim_values = TRUE) {
     $this->delimiter = $delimiter;
     $this->enclosure = $enclosure;
     $this->escapeChar = $escape_char;
+    $this->stripTags = $strip_tags;
+    $this->trimValues = $trim_values;
 
     if (!ini_get("auto_detect_line_endings")) {
       ini_set("auto_detect_line_endings", '1');
@@ -221,10 +241,13 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *
    */
   protected function formatValue($value) {
-    // @todo Make these filters configurable.
-    $value = Html::decodeEntities($value);
-    $value = strip_tags($value);
-    $value = trim($value);
+    if ($this->stripTags) {
+      $value = Html::decodeEntities($value);
+      $value = strip_tags($value);
+    }
+    if ($this->trimValues) {
+      $value = trim($value);
+    }
 
     return $value;
   }
@@ -313,6 +336,8 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
     $this->enclosure = $settings['enclosure'];
     $this->escapeChar = $settings['escape_char'];
     $this->useUtf8Bom = ($settings['encoding'] === 'utf8' && !empty($settings['utf8_bom']));
+    $this->stripTags = $settings['strip_tags'];
+    $this->trimValues = $settings['trim'];
   }
 
 }
