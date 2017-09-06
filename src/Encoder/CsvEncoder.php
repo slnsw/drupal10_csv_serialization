@@ -140,7 +140,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
       if ($this->useUtf8Bom) {
         $csv->setOutputBOM(Writer::BOM_UTF8);
       }
-      $headers = $this->extractHeaders($data);
+      $headers = $this->extractHeaders($data, $context);
       $csv->insertOne($headers);
       $csv->addFormatter(array($this, 'formatRow'));
       foreach ($data as $row) {
@@ -160,6 +160,9 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *
    * @param array $data
    *   The array of data to be converted to a CSV.
+   * @param array $context
+   *   Options that normalizers/encoders have access to. For views encoders
+   *   this means that we'll have the view available here.
    *
    * We must make the assumption that each row shares the same set of headers
    * will all other rows. This is inherent in the structure of a CSV.
@@ -167,16 +170,23 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    * @return array
    *   An array of CSV headesr.
    */
-  protected function extractHeaders($data) {
+  protected function extractHeaders($data, array $context = array()) {
+    $headers = [];
     if (!empty($data)) {
       $first_row = $data[0];
-      $headers = array_keys($first_row);
+      $allowed_headers = array_keys($first_row);
 
-      return $headers;
+      $fields = $context['views_style_plugin']
+        ->view
+        ->getDisplay('rest_export_attachment_1')
+        ->getOption('fields');
+
+      foreach ($allowed_headers as $allowed_header) {
+        $headers[] = !empty($fields[$allowed_header]['label']) ? $fields[$allowed_header]['label'] : $allowed_header;
+      }
     }
-    else {
-      return array();
-    }
+
+    return $headers;
   }
 
   /**
