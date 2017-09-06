@@ -45,16 +45,21 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   protected static $format = 'csv';
 
   /**
+   * Indicates usage of UTF-8 signature in generated CSV file.
+   *
+   * @var bool
+   */
+  protected $useUtf8Bom = FALSE;
+
+  /**
    * Constructs the class.
    *
    * @param string $delimiter
    *   Indicates the character used to delimit fields. Defaults to ",".
-   *
    * @param string $enclosure
    *   Indicates the character used for field enclosure. Defaults to '"'.
-   *
    * @param string $escape_char
-   *   Indicates the character used for escaping. Defaults to "\"
+   *   Indicates the character used for escaping. Defaults to "\".
    */
   public function __construct($delimiter = ",", $enclosure = '"', $escape_char = "\\") {
     $this->delimiter = $delimiter;
@@ -112,6 +117,9 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
       $csv->setEscape($this->escapeChar);
 
       // Set data.
+      if ($this->useUtf8Bom) {
+        $csv->setOutputBOM(Writer::BOM_UTF8);
+      }
       $headers = $this->extractHeaders($data);
       $csv->insertOne($headers);
       $csv->addFormatter(array($this, 'formatRow'));
@@ -304,6 +312,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
     $this->delimiter = str_replace('\t', "\t", $settings['delimiter']);
     $this->enclosure = $settings['enclosure'];
     $this->escapeChar = $settings['escape_char'];
+    $this->useUtf8Bom = ($settings['encoding'] === 'utf8' && !empty($settings['utf8_bom']));
   }
 
 }
