@@ -230,7 +230,12 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
     $csv->setEnclosure($this->enclosure);
     $csv->setEscape($this->escapeChar);
 
-    return $csv->fetchAssoc(0, array($this, 'expandRow'));
+    $results = [];
+    foreach ($csv->fetchAssoc() as $row) {
+      $results[] = $this->expandRow($row);
+    }
+
+    return $results;
   }
 
   /**
