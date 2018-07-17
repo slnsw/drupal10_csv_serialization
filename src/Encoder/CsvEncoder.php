@@ -168,11 +168,11 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    * will all other rows. This is inherent in the structure of a CSV.
    *
    * @return array
-   *   An array of CSV headesr.
+   *   An array of CSV headers.
    */
-  protected function extractHeaders($data, array $context = array()) {
+  protected function extractHeaders(array $data, array $context = array()) {
     $headers = [];
-    if (!empty($data)) {
+    if (isset($data[0])) {
       $first_row = $data[0];
       $allowed_headers = array_keys($first_row);
 
