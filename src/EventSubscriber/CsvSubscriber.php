@@ -4,7 +4,6 @@ namespace Drupal\csv_serialization\EventSubscriber;
 
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**

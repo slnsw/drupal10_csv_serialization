@@ -4,6 +4,6 @@
   "type": "drupal-module",
   "license": "GPL-2.0+",
   "require": {
-    "league/csv": "^8.0"
+    "league/csv": "^9.1"
   }
 }

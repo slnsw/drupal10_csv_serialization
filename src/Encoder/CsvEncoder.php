@@ -9,6 +9,8 @@ use League\Csv\Reader;
 use SplTempFileObject;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
+use League\Csv\ByteSequence;
+use League\Csv\CharsetConverter;
 
 /**
  * Adds CSV encoder support for the Serialization API.
@@ -138,15 +140,13 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
 
       // Set data.
       if ($this->useUtf8Bom) {
-        $csv->setOutputBOM(Writer::BOM_UTF8);
+        $csv->setOutputBOM(ByteSequence::BOM_UTF8);
       }
       $headers = $this->extractHeaders($data, $context);
       $csv->insertOne($headers);
       $csv->addFormatter(array($this, 'formatRow'));
-      foreach ($data as $row) {
-        $csv->insertOne($row);
-      }
-      $output = $csv->__toString();
+      $csv->insertAll($data);
+      $output = $csv->getContent();
 
       return trim($output);
     }
@@ -168,7 +168,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    * will all other rows. This is inherent in the structure of a CSV.
    *
    * @return array
-   *   An array of CSV headesr.
+   *   An array of CSV headers.
    */
   protected function extractHeaders($data, array $context = array()) {
     $headers = [];
@@ -203,7 +203,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   public function formatRow($row) {
     $formatted_row = array();
 
-    foreach ($row as $column_name => $cell_data) {
+    foreach ($row as $cell_data) {
       if (is_array($cell_data)) {
         $cell_value = $this->flattenCell($cell_data);
       }
@@ -250,7 +250,6 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *
    * @return string
    *   The formatted value.
-   *
    */
   protected function formatValue($value) {
     if ($this->stripTags) {
@@ -274,7 +273,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
     $csv->setEscape($this->escapeChar);
 
     $results = [];
-    foreach ($csv->fetchAssoc() as $row) {
+    foreach ($csv->getRecords() as $row) {
       $results[] = $this->expandRow($row);
     }
 
@@ -322,7 +321,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   protected function arrayDepth($array) {
     $max_indentation = 1;
 
-    $array_str = print_r($array, true);
+    $array_str = print_r($array, TRUE);
     $lines = explode("\n", $array_str);
 
     foreach ($lines as $line) {
@@ -339,8 +338,17 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   /**
    * Set CSV settings from the Views settings array.
    *
+   * This allows modules which provides integration
+   * (views_data_export for example) to change default settings.
+   *
    * If a tab character ('\t') is used for the delimiter, it will be properly
    * converted to "\t".
+   *
+   * @param array $settings
+   *   Array of settings.
+   *
+   * @see \Drupal\views_data_export\Plugin\views\style\DataExport()
+   * for list of settings.
    */
   protected function setSettings(array $settings) {
     // Replace tab character with one that will be properly interpreted.
