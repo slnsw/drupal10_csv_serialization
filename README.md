@@ -53,7 +53,8 @@ Configuration
 8. Verify that content exists which should be displayed in the view.
 9. Save the view.
 
-Visit the path that you set for the view
+Visit the path that you set for the view and add this additional query string:
+"?_format=csv".
 A CSV file should be automatically downloaded when you visit the URL
 
 Maintainers
