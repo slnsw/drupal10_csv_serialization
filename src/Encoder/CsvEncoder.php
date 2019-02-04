@@ -360,7 +360,9 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
     $this->useUtf8Bom = ($settings['encoding'] === 'utf8' && !empty($settings['utf8_bom']));
     $this->stripTags = $settings['strip_tags'];
     $this->trimValues = $settings['trim'];
-    $this->outputHeader = $settings['output_header'];
+    if (array_key_exists('output_header', $settings)) {
+      $this->outputHeader = $settings['output_header'];
+    }
   }
 
 }
