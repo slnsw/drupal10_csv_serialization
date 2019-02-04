@@ -66,6 +66,13 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   protected $useUtf8Bom = FALSE;
 
   /**
+   * Whether to output the header row.
+   *
+   * @var bool
+   */
+  protected $outputHeader = TRUE;
+
+  /**
    * Constructs the class.
    *
    * @param string $delimiter
@@ -140,8 +147,11 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
       if ($this->useUtf8Bom) {
         $csv->setOutputBOM(Writer::BOM_UTF8);
       }
-      $headers = $this->extractHeaders($data, $context);
-      $csv->insertOne($headers);
+      // Set headers.
+      if ($this->outputHeader) {
+        $headers = $this->extractHeaders($data, $context);
+        $csv->insertOne($headers);
+      }
       $csv->addFormatter(array($this, 'formatRow'));
       foreach ($data as $row) {
         $csv->insertOne($row);
@@ -350,6 +360,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
     $this->useUtf8Bom = ($settings['encoding'] === 'utf8' && !empty($settings['utf8_bom']));
     $this->stripTags = $settings['strip_tags'];
     $this->trimValues = $settings['trim'];
+    $this->outputHeader = $settings['output_header'];
   }
 
 }
