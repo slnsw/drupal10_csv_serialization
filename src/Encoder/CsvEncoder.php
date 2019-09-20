@@ -17,7 +17,6 @@ use League\Csv\CharsetConverter;
  */
 class CsvEncoder implements EncoderInterface, DecoderInterface {
 
-
   /**
    * Indicates the character used to delimit fields. Defaults to ",".
    *
@@ -68,6 +67,13 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   protected $useUtf8Bom = FALSE;
 
   /**
+   * Whether to output the header row.
+   *
+   * @var bool
+   */
+  protected $outputHeader = TRUE;
+
+  /**
    * Constructs the class.
    *
    * @param string $delimiter
@@ -112,7 +118,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *
    * Uses HTML-safe strings, with several characters escaped.
    */
-  public function encode($data, $format, array $context = array()) {
+  public function encode($data, $format, array $context = []) {
     switch (gettype($data)) {
       case "array":
         break;
@@ -123,7 +129,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
 
       // May be bool, integer, double, string, resource, NULL, or unknown.
       default:
-        $data = array($data);
+        $data = [$data];
         break;
     }
 
@@ -142,11 +148,16 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
       if ($this->useUtf8Bom) {
         $csv->setOutputBOM(ByteSequence::BOM_UTF8);
       }
-      $headers = $this->extractHeaders($data, $context);
-      $csv->insertOne($headers);
-      $csv->addFormatter(array($this, 'formatRow'));
-      $csv->insertAll($data);
-      $output = $csv->getContent();
+      // Set headers.
+      if ($this->outputHeader) {
+        $headers = $this->extractHeaders($data, $context);
+        $csv->insertOne($headers);
+      }
+      $csv->addFormatter([$this, 'formatRow']);
+      foreach ($data as $row) {
+        $csv->insertOne($row);
+      }
+      $output = $csv->__toString();
 
       return trim($output);
     }
@@ -164,13 +175,13 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *   Options that normalizers/encoders have access to. For views encoders
    *   this means that we'll have the view available here.
    *
-   * We must make the assumption that each row shares the same set of headers
-   * will all other rows. This is inherent in the structure of a CSV.
+   *   We must make the assumption that each row shares the same set of headers
+   *   will all other rows. This is inherent in the structure of a CSV.
    *
    * @return array
    *   An array of CSV headers.
    */
-  protected function extractHeaders(array $data, array $context = array()) {
+  protected function extractHeaders(array $data, array $context = []) {
     $headers = [];
     if (isset($data[0])) {
       $first_row = $data[0];
@@ -197,11 +208,14 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    * This flattens complex data structures into a string, and formats
    * the string.
    *
-   * @param $row
+   * @param array $row
+   *   A row of data. This may be a flat or multidimensional array.
+   *
    * @return array
+   *   A flat array of key/value, with value flattened into string.
    */
-  public function formatRow($row) {
-    $formatted_row = array();
+  public function formatRow(array $row) {
+    $formatted_row = [];
 
     foreach ($row as $cell_data) {
       if (is_array($cell_data)) {
@@ -226,7 +240,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    * @return string
    *   The string value of the CSV cell, un-sanitized.
    */
-  protected function flattenCell($data) {
+  protected function flattenCell(array $data) {
     $depth = $this->arrayDepth($data);
 
     if ($depth == 1) {
@@ -266,7 +280,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   /**
    * {@inheritdoc}
    */
-  public function decode($data, $format, array $context = array()) {
+  public function decode($data, $format, array $context = []) {
     $csv = Reader::createFromString($data);
     $csv->setDelimiter($this->delimiter);
     $csv->setEnclosure($this->enclosure);
@@ -289,7 +303,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    * @return array
    *   The same row of CSV cells, with each cell's contents exploded.
    */
-  public function expandRow($row) {
+  public function expandRow(array $row) {
     foreach ($row as $column_name => $cell_data) {
       // @todo Allow customization of this in-cell separator.
       if (strpos($cell_data, '|') !== FALSE) {
@@ -313,12 +327,15 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    * This method determines array depth by analyzing the indentation of the
    * dumped array. This avoid potential issues with recursion.
    *
-   * @param $array
+   * @param array $array
+   *   The array to measure.
+   *
    * @return float
+   *   The depth of the array.
    *
    * @see http://stackoverflow.com/a/263621
    */
-  protected function arrayDepth($array) {
+  protected function arrayDepth(array $array) {
     $max_indentation = 1;
 
     $array_str = print_r($array, TRUE);
@@ -350,7 +367,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    * @see \Drupal\views_data_export\Plugin\views\style\DataExport()
    * for list of settings.
    */
-  protected function setSettings(array $settings) {
+  public function setSettings(array $settings) {
     // Replace tab character with one that will be properly interpreted.
     $this->delimiter = str_replace('\t', "\t", $settings['delimiter']);
     $this->enclosure = $settings['enclosure'];
@@ -358,6 +375,9 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
     $this->useUtf8Bom = ($settings['encoding'] === 'utf8' && !empty($settings['utf8_bom']));
     $this->stripTags = $settings['strip_tags'];
     $this->trimValues = $settings['trim'];
+    if (array_key_exists('output_header', $settings)) {
+      $this->outputHeader = $settings['output_header'];
+    }
   }
 
 }
