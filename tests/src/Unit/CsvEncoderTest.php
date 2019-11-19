@@ -13,12 +13,14 @@ use Drupal\Tests\UnitTestCase;
 class CsvEncoderTest extends UnitTestCase {
 
   /**
+   * The CSV encoder.
+   *
    * @var \Drupal\csv_serialization\Encoder\CsvEncoder
    */
-  public $conversionService;
+  public $encoder;
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function setUp() {
     $this->encoder = new CsvEncoder();
