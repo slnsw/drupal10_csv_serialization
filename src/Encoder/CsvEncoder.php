@@ -155,8 +155,10 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
         $csv->insertOne($headers);
       }
       $csv->addFormatter([$this, 'formatRow']);
-      foreach ($data as $row) {
-        $csv->insertOne($row);
+      if (isset($data[0])) {
+        foreach ($data as $row) {
+          $csv->insertOne($row);
+        }
       }
       $output = (string) $csv;
 
