@@ -246,7 +246,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   protected function flattenCell(array $data) {
     $depth = $this->arrayDepth($data);
 
-    if ($depth === 1) {
+    if ($depth == 1) {
       // @todo Allow customization of this in-cell separator.
       return implode('|', $data);
     }
