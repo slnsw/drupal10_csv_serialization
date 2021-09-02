@@ -252,16 +252,16 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *   The string value of the CSV cell, un-sanitized.
    */
   protected function flattenCell(array $data) {
-    $depth = $this->arrayDepth($data);
+    $depth = (int) $this->arrayDepth($data);
 
-    if ($depth == 1) {
+    if ($depth === 1) {
       // @todo Allow customization of this in-cell separator.
       return implode('|', $data);
     }
 
       $cell_value = "";
       foreach ($data as $item) {
-        $cell_value .= '|' . $this->flattenCell($item);
+        $cell_value .= '|' . (is_array($item) ? $this->flattenCell($item) : $item);
       }
 
       return trim($cell_value, '|');
