@@ -101,10 +101,6 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
     $this->escapeChar = $escape_char;
     $this->stripTags = $strip_tags;
     $this->trimValues = $trim_values;
-
-    if (!ini_get("auto_detect_line_endings")) {
-      ini_set("auto_detect_line_endings", '1');
-    }
   }
 
   /**
