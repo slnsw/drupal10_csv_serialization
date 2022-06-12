@@ -229,7 +229,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
         $cell_value = $this->flattenCell($cell_data);
       }
       else {
-        $cell_value = $cell_data;
+        $cell_value = (string) $cell_data;
       }
 
       $formatted_row[] = $this->formatValue($cell_value);
