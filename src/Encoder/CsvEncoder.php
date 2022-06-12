@@ -162,8 +162,8 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
         $csv->insertOne($headers);
       }
       $csv->addFormatter([$this, 'formatRow']);
-      if (isset($data[0])) {
-        foreach ($data as $row) {
+      foreach ($data as $row) {
+        if (is_array($row)) {
           $csv->insertOne($row);
         }
       }
