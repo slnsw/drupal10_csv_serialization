@@ -103,14 +103,14 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
   /**
    * {@inheritdoc}
    */
-  public function supportsEncoding($format) {
+  public function supportsEncoding(string $format): bool {
     return $format == static::$format;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function supportsDecoding($format) {
+  public function supportsDecoding(string $format): bool {
     return $format == static::$format;
   }
 
@@ -119,7 +119,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    *
    * Uses HTML-safe strings, with several characters escaped.
    */
-  public function encode($data, $format, array $context = []) {
+  public function encode(mixed $data, string $format, array $context = []): string {
     switch (gettype($data)) {
       case "array":
         break;
@@ -288,7 +288,7 @@ class CsvEncoder implements EncoderInterface, DecoderInterface {
    * @throws \League\Csv\Exception
    * @throws \League\Csv\Exception
    */
-  public function decode($data, $format, array $context = []) {
+  public function decode(string $data, string $format, array $context = []) {
     $csv = Reader::createFromString($data);
     $csv->setDelimiter($this->delimiter);
     $csv->setEnclosure($this->enclosure);
